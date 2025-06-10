@@ -1,16 +1,8 @@
 {
-
-  "name": "my-react-app",
+  "name": "simple-static-site",
   "version": "1.0.0",
   "scripts": {
-    "start": "npx serve"
+    "start": "npx serve public"
   },
-  "dependencies": {
-  "react": "^18.2.0",
-  "react-dom": "^18.2.0",
-  "axios": "^1.6.7",
-  "jwt-decode": "^3.1.0",
-  "jspdf": "^2.5.1",
-  "react-router-dom": "^6.22.0"
-  }
+  "dependencies": {}
 }
