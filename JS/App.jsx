@@ -15,6 +15,30 @@ function App() {
   phone: ''
 });
 
+useEffect(() => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    setIsLoggedIn(true);
+    const decoded = jwt_decode(token);
+    setIsAdmin(decoded.role === 'admin');
+
+    fetch('https://server-production-b2a6.up.railway.app/api/users/me', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(userData => {
+        setAuthFormData(prev => ({
+          ...prev,
+          firstName: userData.first_name || '',
+          lastName: userData.last_name || ''
+        }));
+      })
+      .catch(err => {
+        console.error("Ошибка загрузки профиля:", err);
+      });
+  }
+}, []);
+
   // Пользователи
   const [users, setUsers] = useState([]);
   // Компоненты (лак, доска, ступень)
@@ -1431,21 +1455,11 @@ const renderLKMCalculator = () => (
     {/* Основной контент поверх фона */}
     <div className="relative z-10 flex flex-col flex-grow">
       {/* Навигация */}
-      <nav className="bg-white p-4 shadow flex items-center justify-between">
-{/* Левая часть - профиль пользователя */}
-{isLoggedIn && (
-  <div className="flex items-center space-x-2">
-    {/* Иконка силуэта */}
-    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-    </svg>
-    {/* Имя и фамилия */}
-    <span className="text-gray-800 font-medium">{authFormData.firstName} {authFormData.lastName}</span>
-  </div>
-)}
+<nav className="bg-white p-4 shadow flex items-center relative">
+  {/* Левая часть */}
+  <div className="w-[180px]"></div>
 
-  {/* Центральное меню */}
+  {/* Центральная часть - теперь не absolute */}
   <div className="flex-1 flex justify-center">
     <ul className="flex space-x-20 items-center">
       <li>
@@ -1477,14 +1491,25 @@ const renderLKMCalculator = () => (
     </ul>
   </div>
 
-  {/* Правая часть - кнопка входа/выхода */}
-  <div className="w-20 flex justify-end">
+  {/* Правая часть */}
+  <div className="w-[180px] flex justify-end">
     {isLoggedIn ? (
-      <button onClick={handleLogout} className="text-red-500 font-medium relative group mr-3">Выйти
-        <span className="absolute bottom-0 right-0 w-0 group-hover:w-full h-0.5 bg-gradient-to-l from-red-400 to-red-600 transition-all duration-300"></span>
-      </button>
+      <div className="flex items-center space-x-2 min-w-max mr-3">
+        {/* Иконка силуэта */}
+        <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+        {/* Имя и фамилия */}
+        <span className="text-gray-800 font-medium">{authFormData.firstName} {authFormData.lastName}</span>
+        <button onClick={handleLogout} className="text-red-500 font-medium relative group">
+          Выйти
+          <span className="absolute bottom-0 right-0 w-0 group-hover:w-full h-0.5 bg-gradient-to-l from-red-400 to-red-600 transition-all duration-300"></span>
+        </button>
+      </div>
     ) : (
-      <button onClick={() => setCurrentPage('login')} className="text-blue-500 font-medium relative group mr-3">Войти
+      <button onClick={() => setCurrentPage('login')} className="text-blue-500 font-medium relative group mr-3">
+        Войти
         <span className="absolute bottom-0 right-0 w-0 group-hover:w-full h-0.5 bg-gradient-to-l from-indigo-600 to-blue-600 transition-all duration-300"></span>
       </button>
     )}
