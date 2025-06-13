@@ -15,6 +15,30 @@ function App() {
   phone: ''
 });
 
+useEffect(() => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    setIsLoggedIn(true);
+    const decoded = jwt_decode(token);
+    setIsAdmin(decoded.role === 'admin');
+
+    fetch('https://server-production-b2a6.up.railway.app/api/users/me', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(userData => {
+        setAuthFormData(prev => ({
+          ...prev,
+          firstName: userData.first_name || '',
+          lastName: userData.last_name || ''
+        }));
+      })
+      .catch(err => {
+        console.error("Ошибка загрузки профиля:", err);
+      });
+  }
+}, []);
+
   // Пользователи
   const [users, setUsers] = useState([]);
   // Компоненты (лак, доска, ступень)
@@ -43,62 +67,70 @@ function App() {
   // Иконки в виде SVG
 const icons = {
   wood: React.createElement('svg', {
-    className: "w-8 h-8 text-green-600 mb-3",
-    fill: "none",
-    stroke: "currentColor",
-    viewBox: "0 0 24 24"
-  },
-    React.createElement('path', {
-      d: "M5 3v4M3 5h4M6 17v4m-2-2l2-2m2 2l2-2m3-8a9 9 0 11-18 0 9 9 0 0118 0z",
-      strokeWidth: 2,
-      strokeLinecap: "round",
-      strokeLinejoin: "round"
-    }),
-    React.createElement('path', {
-      d: "M12 8v8m-4-4h8",
-      strokeWidth: 2,
-      strokeLinecap: "round",
-      strokeLinejoin: "round"
-    })
-  ),
+  className: "w-8 h-8 text-green-600 mb-3",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 2,
+  viewBox: "0 0 24 24"
+},
+  React.createElement('path', {
+    d: "M12 2l4 6h-3l3 5h-3l3 5h-8l3-5H8l3-5H8l4-6z",
+    strokeLinecap: "round",
+    strokeLinejoin: "round"
+  }),
+  React.createElement('path', {
+    d: "M12 22v-4",
+    strokeLinecap: "round",
+    strokeLinejoin: "round"
+  })
+),
   lacquer: React.createElement('svg', {
-    className: "w-8 h-8 text-indigo-600 mb-3",
-    fill: "none",
-    stroke: "currentColor",
-    viewBox: "0 0 24 24"
-  },
-    React.createElement('path', {
-      d: "M13 10V3L4 14h7v7l9-11h-7z",
-      strokeWidth: 2,
-      strokeLinecap: "round",
-      strokeLinejoin: "round"
-    }),
-    React.createElement('path', {
-      d: "M17 18H7a2 2 0 01-2-2V4a2 2 0 012-2h5l7 7v10a2 2 0 01-2 2z",
-      strokeWidth: 2,
-      strokeLinecap: "round",
-      strokeLinejoin: "round"
-    })
-  ),
+  className: "w-8 h-8 text-indigo-600 mb-3",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 2,
+  viewBox: "0 0 24 24"
+},
+  // Ролик
+  React.createElement('rect', {
+    x: "2", y: "3", width: "14", height: "6", rx: "2", ry: "2",
+    strokeLinecap: "round",
+    strokeLinejoin: "round"
+  }),
+  // Ручка вниз
+  React.createElement('path', {
+    d: "M10 9v4a2 2 0 002 2h4v4",
+    strokeLinecap: "round",
+    strokeLinejoin: "round"
+  })
+),
+
   fasteners: React.createElement('svg', {
-    className: "w-8 h-8 text-yellow-600 mb-3",
-    fill: "none",
-    stroke: "currentColor",
-    viewBox: "0 0 24 24"
-  },
-    React.createElement('path', {
-      d: "M13 10V3L4 14h7v7l9-11h-7z",
-      strokeWidth: 2,
-      strokeLinecap: "round",
-      strokeLinejoin: "round"
-    }),
-    React.createElement('path', {
-      d: "M17 18H7a2 2 0 01-2-2V4a2 2 0 012-2h5l7 7v10a2 2 0 01-2 2z",
-      strokeWidth: 2,
-      strokeLinecap: "round",
-      strokeLinejoin: "round"
-    })
-  ),
+  className: "w-8 h-8 text-yellow-600 mb-3",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 2,
+  viewBox: "0 0 24 24"
+},
+  // Головка шурупа (крестовая)
+  React.createElement('path', {
+    d: "M14 2h-4m2 0v4",
+    strokeLinecap: "round",
+    strokeLinejoin: "round"
+  }),
+  // Резьба шурупа
+  React.createElement('path', {
+    d: "M12 6v16",
+    strokeLinecap: "round",
+    strokeLinejoin: "round"
+  }),
+  React.createElement('path', {
+    d: "M10 10l4 2m-4 2l4 2m-4 2l4 2",
+    strokeLinecap: "round",
+    strokeLinejoin: "round"
+  })
+),
+
   pdf: React.createElement('svg', {
     className: "w-8 h-8 text-red-600 mb-3",
     fill: "none",
@@ -151,23 +183,27 @@ const icons = {
   },
     // Заголовок
     React.createElement('h2', {
-      className: "text-xl font-semibold text-gray-800 mb-6 flex items-center"
-    },
-      React.createElement('svg', {
-        className: "w-5 h-5 mr-2 text-indigo-600",
-        fill: "none",
-        stroke: "currentColor",
-        viewBox: "0 0 24 24"
-      },
-        React.createElement('path', {
-          d: "M9 12l2 2 4-4m5.586 5.586a2 2 0 01-2.828 0L7 12m0 0l-2-2m2 2l2 2M7 12h10a2 2 0 002-2V6a2 2 0 00-2-2H7a2 2 0 00-2 2v4a2 2 0 002 2z",
-          strokeWidth: 2,
-          strokeLinecap: "round",
-          strokeLinejoin: "round"
-        })
-      ),
-      React.createElement('span', null, "Основные функции")
-    ),
+  className: "text-xl font-semibold text-gray-800 mb-6 flex items-center"
+},
+  React.createElement('svg', {
+    className: "w-5 h-5 mr-2 text-indigo-600",
+    fill: "none",
+    stroke: "currentColor",
+    viewBox: "0 0 24 24",
+    strokeWidth: 2
+  },
+    React.createElement('path', {
+      d: "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.591 1.106c1.527-.878 3.229.824 2.35 2.35a1.724 1.724 0 001.107 2.592c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.107 2.591c.878 1.527-.824 3.229-2.35 2.35a1.724 1.724 0 00-2.592 1.107c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.591-1.107c-1.527.878-3.229-.824-2.35-2.35a1.724 1.724 0 00-1.107-2.592c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.107-2.591c-.878-1.527.824-3.229 2.35-2.35.996.573 2.25.06 2.591-1.107z",
+      strokeLinecap: "round",
+      strokeLinejoin: "round"
+    }),
+    React.createElement('circle', {
+      cx: "12", cy: "12", r: "3"
+    })
+  ),
+  React.createElement('span', null, "Основные функции")
+),
+
 
     // Боксы
     React.createElement('div', {
@@ -245,29 +281,36 @@ const icons = {
 
         // Функция 6: Разграничение прав
         React.createElement('div', {
-          key: 'permissions',
-          className: "bg-white p-5 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 border-l-4 border-purple-500"
+  key: 'permissions',
+  className: "bg-white p-5 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 border-l-4 border-purple-500"
+},
+        React.createElement('svg', {
+          className: "w-8 h-8 text-purple-600 mb-3",
+          fill: "none",
+          stroke: "currentColor",
+          strokeWidth: 2,
+          viewBox: "0 0 24 24"
         },
-          React.createElement('svg', {
-            className: "w-8 h-8 text-purple-600 mb-3",
-            fill: "none",
-            stroke: "currentColor",
-            viewBox: "0 0 24 24"
-          },
-            React.createElement('path', {
-              d: "M9 12l2 2 4-4m5.586 5.586a2 2 0 01-2.828 0L7 12m0 0l-2-2m2 2l2 2M9 12l2 2 4-4",
-              strokeWidth: 2,
-              strokeLinecap: "round",
-              strokeLinejoin: "round"
-            })
-          ),
-          React.createElement('h3', {
-            className: "text-lg font-semibold text-gray-800 mb-2"
-          }, "Разграничение прав"),
-          React.createElement('p', {
-            className: "text-gray-600 text-sm"
-          }, "Клиенты — только просмотр, менеджеры — редактирование материалов и цен.")
-        )
+          // Замок
+          React.createElement('path', {
+            d: "M8 11V7a4 4 0 118 0v4",
+            strokeLinecap: "round",
+            strokeLinejoin: "round"
+          }),
+          React.createElement('rect', {
+            x: "6", y: "11", width: "12", height: "10", rx: "2", ry: "2",
+            strokeLinecap: "round",
+            strokeLinejoin: "round"
+          })
+        ),
+        React.createElement('h3', {
+          className: "text-lg font-semibold text-gray-800 mb-2"
+        }, "Разграничение прав"),
+        React.createElement('p', {
+          className: "text-gray-600 text-sm"
+        }, "Клиенты — только просмотр, менеджеры — редактирование материалов и цен.")
+      )
+
       ]
     )
   )
@@ -351,74 +394,74 @@ useEffect(() => {
   }, [selectedLac, components.lac]);
 
   // Авторизация
-  const handleAuth = async (e) => {
-    e.preventDefault();
-    const { username, password } = authFormData;
+const handleAuth = async (e) => {
+  e.preventDefault();
+  const { username, password } = authFormData;
 
-    if (!username || !password) {
-      alert('Заполните все поля');
+  if (!username || !password) {
+    alert('Заполните все поля');
+    return;
+  }
+
+  try {
+    const res = await fetch('https://server-production-b2a6.up.railway.app/api/users/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        username,
+        password
+      })
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      alert(errorData.error || 'Ошибка входа');
       return;
     }
 
-    try {
-      const res = await fetch('https://server-production-b2a6.up.railway.app/api/users/login', {
-        method: 'POST',
+    const data = await res.json();
+
+    if (data.token) {
+      // Сохраняем токен и обновляем состояние
+      localStorage.setItem('token', data.token);
+      setIsLoggedIn(true);
+      showToast('Вход выполнен успешно! 👋', 'success');
+      setCurrentPage('home');
+
+      // Декодируем токен для получения роли и userId
+      const decoded = jwt_decode(data.token);
+      setIsAdmin(decoded.role === 'admin');
+      localStorage.setItem('role', decoded.role);
+
+      // Запрашиваем данные текущего пользователя
+      const userRes = await fetch('https://server-production-b2a6.up.railway.app/api/users/me', {
         headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          username: authFormData.username,
-          password: authFormData.password
-        })
+          Authorization: `Bearer ${data.token}`
+        }
       });
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        alert(errorData.error || 'Ошибка входа');
-        return;
+      if (!userRes.ok) {
+        throw new Error('Не удалось загрузить данные пользователя');
       }
 
-      const data = await res.json();
+      const userData = await userRes.json();
 
-  if (data.token) {
-        // Сохраняем токен и обновляем состояние
-        localStorage.setItem('token', data.token);
-        setIsLoggedIn(true);
-        showToast('Вход выполнен успешно! 👋', 'success');
-        setCurrentPage('home');
-
-        // Декодируем токен для получения роли и userId
-        const decoded = jwt_decode(data.token);
-        setIsAdmin(decoded.role === 'admin');
-        localStorage.setItem('role', decoded.role);
-
-        // Запрашиваем данные текущего пользователя
-        const userRes = await fetch('https://server-production-b2a6.up.railway.app/api/users/me', {
-          headers: {
-            Authorization: `Bearer ${data.token}`
-          }
-        });
-
-        if (!userRes.ok) {
-          throw new Error('Не удалось загрузить данные пользователя');
-        }
-
-        const userData = await userRes.json();
-
-        // Обновляем форму авторизации данными пользователя
-        setAuthFormData(prev => ({
-          ...prev,
-          firstName: userData.first_name || '',
-          lastName: userData.last_name || ''
-        }));
-      }
-    } catch (err) {
-      console.error('Ошибка при входе:', err);
-      alert('Произошла ошибка. Попробуйте снова.');
+      // Обновляем форму авторизации данными пользователя
+      setAuthFormData(prev => ({
+        ...prev,
+        firstName: userData.first_name || '',
+        lastName: userData.last_name || ''
+      }));
     }
-  };
+  } catch (err) {
+    console.error('Ошибка при входе:', err);
+    showToast('Неверный логин или пароль!', 'falls');
+  }
+};
 
-  //Регистрация пользователя
+  
   //Регистрация пользователя
   const handleRegister = async (e) => {
   e.preventDefault();
@@ -433,7 +476,7 @@ useEffect(() => {
   });
   console.log('Отправляемые данные:', authFormData); // Логируем данные
   try {
-    const res = await fetch('https://server-production-b2a6.up.railway.app/api/users/register', { // Убедитесь, что порт и путь верны
+    const res = await fetch('https://server-production-b2a6.up.railway.app/api/users/register', { 
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password, firstName, lastName, phone })
@@ -535,6 +578,15 @@ useEffect(() => {
 
   if (!width || !length || !steps) {
     showToast('Параметры лестницы не указаны!', 'falls');
+    return;
+  }
+
+  // 🔒 Проверка на минимальные безопасные параметры
+  const MIN_WIDTH = 0.250;   // глубина ступени в мм
+  const MIN_LENGTH = 0.900;  // ширина марша в мм
+
+  if (width < MIN_WIDTH || length < MIN_LENGTH) {
+    showToast('Параметры ваших ступеней не соответствуют минимальным требованиям! Конструкция может быть небезопасной!', 'warning');
     return;
   }
 
@@ -1014,26 +1066,28 @@ const renderStepsPage = () => (
     className: "max-w-5xl mx-auto mt-12 bg-white p-8 rounded-xl shadow-lg transition-all duration-300"
   },
     // Заголовок
-    React.createElement('div', {
-      className: "flex items-center gap-3 mb-6"
-    },
-      React.createElement('svg', {
-        className: "w-6 h-6 text-indigo-600",
-        fill: "none",
-        stroke: "currentColor",
-        viewBox: "0 0 24 24"
-      },
-        React.createElement('path', {
-          d: "M9 12l2 2 4-4m5.586 5.586a2 2 0 01-2.828 0L7 12m0 0l-2-2m2 2l2 2M7 12h10a2 2 0 11-4 0 2 2 0 014 0z",
-          strokeWidth: 2,
-          strokeLinecap: "round",
-          strokeLinejoin: "round"
-        })
-      ),
-      React.createElement('h1', {
-        className: "text-2xl md:text-3xl font-bold text-gray-800"
-      }, "Назначение?")
-    ),
+ React.createElement('div', {
+  className: "flex items-center gap-3 mb-6"
+},
+  React.createElement('svg', {
+    className: "w-6 h-6 text-indigo-600",
+    fill: "none",
+    stroke: "currentColor",
+    viewBox: "0 0 24 24"
+  },
+    React.createElement('path', {
+      d: "M9 9h6v6H9V9zM3 13h2m14 0h2M13 3v2m-2 0V3m0 18v-2m2 0v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42",
+      strokeWidth: 2,
+      strokeLinecap: "round",
+      strokeLinejoin: "round"
+    })
+  ),
+  React.createElement('h1', {
+    className: "text-2xl md:text-3xl font-bold text-gray-800"
+  }, "Назначение?")
+),
+
+
 
     // Введение
     React.createElement('p', {
@@ -1085,26 +1139,27 @@ const renderStepsPage = () => (
         React.createElement('p', { className: "text-sm text-gray-600" }, "Результат за 5 секунд вместо 2 дней ручного труда.")
       ),
       // Гибкость
-      React.createElement('div', {
-        className: "bg-indigo-50 p-5 rounded-xl flex flex-col items-center text-center shadow hover:shadow-xl transition-shadow"
-      },
-        React.createElement('svg', {
-          className: "w-8 h-8 text-purple-600 mb-3",
-          fill: "none",
-          stroke: "currentColor",
-          viewBox: "0 0 24 24"
-        },
-          React.createElement('path', {
-            d: "M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9h0M4 11v3h.582m15.356 0a8.001 8.001 0 00-15.918 0M12 12a3 3 0 110-6 3 3 0 010 6z",
-            strokeWidth: 2,
-            strokeLinecap: "round",
-            strokeLinejoin: "round"
-          })
-        ),
-        React.createElement('p', { className: "font-semibold text-indigo-700 mb-2" }, "Гибкость"),
-        React.createElement('p', { className: "text-sm text-gray-600" }, "Изменение параметров в реальном времени.")
-      )
-    ),
+    React.createElement('div', {
+  className: "bg-indigo-50 p-5 rounded-xl flex flex-col items-center text-center shadow hover:shadow-xl transition-shadow"
+},
+  React.createElement('svg', {
+    className: "w-8 h-8 text-purple-600 mb-3",
+    fill: "none",
+    stroke: "currentColor",
+    viewBox: "0 0 24 24",
+    strokeWidth: 2
+  },
+    // Волнообразная линия — символ гибкости
+    React.createElement('path', {
+      d: "M3 15c2-2 4-4 6-2s4 4 6 2 4-4 6-2",
+      strokeLinecap: "round",
+      strokeLinejoin: "round"
+    }),
+  ),
+  React.createElement('p', { className: "font-semibold text-indigo-700 mb-2" }, "Гибкость"),
+  React.createElement('p', { className: "text-sm text-gray-600" }, "Изменение параметров в реальном времени.")
+    )
+),
 
     // Основные функции
     renderFeatures(),
@@ -1430,22 +1485,11 @@ const renderLKMCalculator = () => (
 
     {/* Основной контент поверх фона */}
     <div className="relative z-10 flex flex-col flex-grow">
-      {/* Навигация */}
-      <nav className="bg-white p-4 shadow flex items-center justify-between">
-{/* Левая часть - профиль пользователя */}
-{isLoggedIn && (
-  <div className="flex items-center space-x-2">
-    {/* Иконка силуэта */}
-    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-    </svg>
-    {/* Имя и фамилия */}
-    <span className="text-gray-800 font-medium">{authFormData.firstName} {authFormData.lastName}</span>
-  </div>
-)}
+<nav className="bg-white p-4 shadow flex items-center relative">
+  {/* Левая часть */}
+  <div className="w-[180px]"></div>
 
-  {/* Центральное меню */}
+  {/* Центральная часть - теперь не absolute */}
   <div className="flex-1 flex justify-center">
     <ul className="flex space-x-20 items-center">
       <li>
@@ -1477,14 +1521,26 @@ const renderLKMCalculator = () => (
     </ul>
   </div>
 
-  {/* Правая часть - кнопка входа/выхода */}
-  <div className="w-20 flex justify-end">
+  {/* Правая часть */}
+  <div className="w-[180px] flex justify-end">
     {isLoggedIn ? (
-      <button onClick={handleLogout} className="text-red-500 font-medium relative group mr-3">Выйти
-        <span className="absolute bottom-0 right-0 w-0 group-hover:w-full h-0.5 bg-gradient-to-l from-red-400 to-red-600 transition-all duration-300"></span>
-      </button>
+      <div className="flex items-center space-x-2 min-w-max mr-3">
+        {/* Иконка силуэта */}
+        <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+        {/* Имя и фамилия */}
+        <span className="text-gray-800 font-medium">{authFormData.firstName} {authFormData.lastName}</span>
+         <span className="text-gray-800 font-medium px-5"></span>
+        <button onClick={handleLogout} className="text-red-500 font-medium relative group ">
+          Выйти
+          <span className="absolute bottom-0 right-0 w-0 group-hover:w-full h-0.5 bg-gradient-to-l from-red-400 to-red-600 transition-all duration-300"></span>
+        </button>
+      </div>
     ) : (
-      <button onClick={() => setCurrentPage('login')} className="text-blue-500 font-medium relative group mr-3">Войти
+      <button onClick={() => setCurrentPage('login')} className="text-blue-500 font-medium relative group mr-3">
+        Войти
         <span className="absolute bottom-0 right-0 w-0 group-hover:w-full h-0.5 bg-gradient-to-l from-indigo-600 to-blue-600 transition-all duration-300"></span>
       </button>
     )}
