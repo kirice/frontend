@@ -380,19 +380,41 @@ useEffect(() => {
 
       const data = await res.json();
 
-      if (data.token) {
+  if (data.token) {
+        // Сохраняем токен и обновляем состояние
         localStorage.setItem('token', data.token);
         setIsLoggedIn(true);
         showToast('Вход выполнен успешно! 👋', 'success');
         setCurrentPage('home');
 
-        const decoded = jwt_decode(data.token); // Обратите внимание на НИЖНЕЕ ПОДЧЁРКИВАНИЕ!
+        // Декодируем токен для получения роли и userId
+        const decoded = jwt_decode(data.token);
         setIsAdmin(decoded.role === 'admin');
         localStorage.setItem('role', decoded.role);
+
+        // Запрашиваем данные текущего пользователя
+        const userRes = await fetch('https://server-production-b2a6.up.railway.app/api/users/me', {
+          headers: {
+            Authorization: `Bearer ${data.token}`
+          }
+        });
+
+        if (!userRes.ok) {
+          throw new Error('Не удалось загрузить данные пользователя');
+        }
+
+        const userData = await userRes.json();
+
+        // Обновляем форму авторизации данными пользователя
+        setAuthFormData(prev => ({
+          ...prev,
+          firstName: userData.first_name || '',
+          lastName: userData.last_name || ''
+        }));
       }
     } catch (err) {
-      console.error(err);
-      alert('Ошибка при входе');
+      console.error('Ошибка при входе:', err);
+      alert('Произошла ошибка. Попробуйте снова.');
     }
   };
 
@@ -1410,8 +1432,18 @@ const renderLKMCalculator = () => (
     <div className="relative z-10 flex flex-col flex-grow">
       {/* Навигация */}
       <nav className="bg-white p-4 shadow flex items-center justify-between">
-  {/* Левая часть (может быть логотипом) */}
-  <div className="w-20"></div>
+{/* Левая часть - профиль пользователя */}
+{isLoggedIn && (
+  <div className="flex items-center space-x-2">
+    {/* Иконка силуэта */}
+    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+    </svg>
+    {/* Имя и фамилия */}
+    <span className="text-gray-800 font-medium">{authFormData.firstName} {authFormData.lastName}</span>
+  </div>
+)}
 
   {/* Центральное меню */}
   <div className="flex-1 flex justify-center">
@@ -1448,11 +1480,11 @@ const renderLKMCalculator = () => (
   {/* Правая часть - кнопка входа/выхода */}
   <div className="w-20 flex justify-end">
     {isLoggedIn ? (
-      <button onClick={handleLogout} className="text-red-500 font-medium relative group">Выйти
+      <button onClick={handleLogout} className="text-red-500 font-medium relative group mr-3">Выйти
         <span className="absolute bottom-0 right-0 w-0 group-hover:w-full h-0.5 bg-gradient-to-l from-red-400 to-red-600 transition-all duration-300"></span>
       </button>
     ) : (
-      <button onClick={() => setCurrentPage('login')} className="text-blue-500 font-medium relative group">Войти
+      <button onClick={() => setCurrentPage('login')} className="text-blue-500 font-medium relative group mr-3">Войти
         <span className="absolute bottom-0 right-0 w-0 group-hover:w-full h-0.5 bg-gradient-to-l from-indigo-600 to-blue-600 transition-all duration-300"></span>
       </button>
     )}
