@@ -1502,6 +1502,7 @@ const renderLKMCalculator = () => (
         </svg>
         {/* Имя и фамилия */}
         <span className="text-gray-800 font-medium">{authFormData.firstName} {authFormData.lastName}</span>
+        <span className="text-gray-800 font-medium px-5"></span>
         <button onClick={handleLogout} className="text-red-500 font-medium relative group">
           Выйти
           <span className="absolute bottom-0 right-0 w-0 group-hover:w-full h-0.5 bg-gradient-to-l from-red-400 to-red-600 transition-all duration-300"></span>
